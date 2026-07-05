@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>My Anime Tracker</title>
+<link rel="icon" href="data:,">
+<style>
+  :root{
+    --bg:#12141a;
+    --card:#1c1f28;
+    --card2:#242833;
+    --text:#e8e9ed;
+    --text-dim:#9aa0ac;
+    --accent:#4f7cff;
+    --green:#3fae5a;
+    --blue:#3f8cae;
+    --orange:#c98a2e;
+    --red:#c9503f;
+    --purple:#8a6fd6;
+    --line:#2c303b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system, Roboto, Segoe UI, sans-serif;
+    min-height:100vh;
+    padding-bottom:30px;
+  }
+  header{
+    padding:20px 16px 14px;
+    border-bottom:1px solid var(--line);
+  }
+  h1{font-size:20px;margin:0;font-weight:600;}
+  .sub{font-size:12px;color:var(--text-dim);margin-top:2px;}
+
+  .stats{display:flex;gap:8px;padding:14px 16px 0;overflow-x:auto;}
+  .stat{flex:1 0 auto;min-width:72px;background:var(--card);border-radius:8px;text-align:center;padding:10px 6px;}
+  .stat b{display:block;font-size:18px;color:var(--accent);}
+  .stat span{font-size:10px;color:var(--text-dim);}
+
+  .controls{padding:14px 16px 0;display:flex;gap:8px;flex-wrap:wrap;}
+  input, select, textarea{
+    background:var(--card);
+    border:1px solid var(--line);
+    color:var(--text);
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:14px;
+    font-family:inherit;
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--accent);}
+  #search{flex:1 1 160px;}
+  #filterGenre, #filterStatus{flex:1 1 110px;}
+
+  .addbar{padding:12px 16px;}
+  .btn{
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:12px 16px;
+    font-size:14px;
+    font-weight:600;
+    width:100%;
+    cursor:pointer;
+  }
+  .btn:active{opacity:.85;}
+  .btn.secondary{background:var(--card2);color:var(--text);border:1px solid var(--line);}
+  .btn.small{width:auto;padding:9px 14px;font-size:12px;}
+  .btn.danger{background:var(--red);}
+
+  #list{padding:6px 16px 20px;display:flex;flex-direction:column;gap:10px;}
+
+  .card{background:var(--card);border-radius:10px;padding:14px;border:1px solid var(--line);}
+  .cardTop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .title{font-size:15px;font-weight:600;margin:0;}
+  .badge{font-size:10px;font-weight:600;padding:4px 8px;border-radius:6px;white-space:nowrap;text-transform:uppercase;letter-spacing:.3px;}
+  .badge.watching{background:rgba(63,174,90,.15);color:var(--green);}
+  .badge.completed{background:rgba(63,140,174,.15);color:var(--blue);}
+  .badge.onhold{background:rgba(201,138,46,.15);color:var(--orange);}
+  .badge.dropped{background:rgba(201,80,63,.15);color:var(--red);}
+  .badge.planned{background:rgba(138,111,214,.15);color:var(--purple);}
+
+  .genres{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0;}
+  .genre-tag{background:var(--card2);color:var(--text-dim);font-size:10px;padding:3px 8px;border-radius:10px;}
+  .meta{font-size:12px;color:var(--text-dim);margin-bottom:8px;}
+  .progress-wrap{background:var(--card2);border-radius:5px;height:6px;overflow:hidden;margin-bottom:8px;}
+  .progress-bar{height:100%;background:var(--accent);}
+  .notes{font-size:12px;color:var(--text-dim);margin-bottom:8px;font-style:italic;}
+
+  .cardActions{display:flex;gap:8px;}
+  .iconbtn{background:none;border:1px solid var(--line);color:var(--text-dim);border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer;}
+
+  .empty{text-align:center;padding:40px 20px;color:var(--text-dim);font-size:14px;}
+
+  #overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:50;}
+  #overlay.show{display:flex;}
+  #modal{background:var(--card);width:100%;max-width:480px;border-radius:14px 14px 0 0;padding:20px 18px 24px;max-height:88vh;overflow-y:auto;}
+  #modal h2{font-size:17px;margin-top:0;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:11px;color:var(--text-dim);margin-bottom:5px;}
+  .field input, .field select, .field textarea{width:100%;}
+  .row2{display:flex;gap:10px;}
+  .row2 .field{flex:1;}
+  .modalActions{display:flex;gap:10px;margin-top:16px;}
+  .modalActions .btn{flex:1;}
+
+  footer{text-align:center;font-size:10px;color:var(--text-dim);padding:14px;}
+
+  /* auth screen */
+  #authScreen{max-width:360px;margin:60px auto;padding:0 20px;}
+  #authScreen h1{text-align:center;margin-bottom:4px;}
+  #authScreen .sub{text-align:center;margin-bottom:24px;}
+  #authError{color:var(--red);font-size:12px;margin-top:8px;min-height:14px;}
+  #syncStatus{font-size:11px;color:var(--text-dim);padding:6px 16px 0;}
+  #setupNotice{max-width:480px;margin:40px auto;padding:20px;background:var(--card);border-radius:10px;font-size:13px;line-height:1.6;}
+  #setupNotice code{background:var(--card2);padding:1px 5px;border-radius:4px;}
+
+  /* chat */
+  #chatFab{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    width:52px;height:52px;
+    border-radius:50%;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    font-size:22px;
+    cursor:pointer;
+    box-shadow:0 4px 12px rgba(0,0,0,.4);
+    z-index:40;
+  }
+  #chatOverlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:60;}
+  #chatOverlay.show{display:flex;}
+  #chatModal{background:var(--card);width:100%;max-width:480px;height:80vh;border-radius:14px 14px 0 0;display:flex;flex-direction:column;}
+  #chatHeader{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+  #chatHeader h2{font-size:15px;margin:0;}
+  #chatClose{background:none;border:none;color:var(--text-dim);font-size:20px;cursor:pointer;}
+  #chatMessages{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
+  .msg{max-width:85%;padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.4;}
+  .msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:3px;}
+  .msg.bot{align-self:flex-start;background:var(--card2);color:var(--text);border-bottom-left-radius:3px;white-space:pre-wrap;}
+  .msg.bot.error{background:rgba(201,80,63,.15);color:var(--red);}
+  #chatInputRow{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line);}
+  #chatInput{flex:1;resize:none;}
+  #chatSend{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:0 16px;font-weight:600;cursor:pointer;}
+  #chatHint{font-size:11px;color:var(--text-dim);padding:0 16px 8px;}
+</style>
+</head>
+<body>
+
+<div id="setupNotice" style="display:none;">
+  <h2 style="margin-top:0;font-size:16px;">Firebase config missing</h2>
+  <p>Ye app cross-device sync ke liye Firebase use karta hai. Config abhi daala nahi gaya.</p>
+  <p>Script ke top mein <code>firebaseConfig</code> object ke andar apni Firebase project ki details paste kar, phir file save kar ke phir se open kar.</p>
+</div>
+
+<div id="authScreen" style="display:none;">
+  <h1>My Anime Tracker</h1>
+  <div class="sub">Login to sync across devices</div>
+  <div class="field"><label>Email</label><input type="email" id="auth_email"></div>
+  <div class="field"><label>Password</label><input type="password" id="auth_password"></div>
+  <button class="btn" onclick="doLogin()">Login</button>
+  <button class="btn secondary" style="margin-top:8px;" onclick="doSignup()">Create Account</button>
+  <div id="authError"></div>
+</div>
+
+<div id="app" style="display:none;">
+  <header>
+    <h1>My Anime Tracker</h1>
+    <div class="sub" id="userEmail"></div>
+  </header>
+
+  <div id="syncStatus">Syncing...</div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="controls">
+    <input type="text" id="search" placeholder="Search title...">
+    <select id="filterStatus">
+      <option value="">All Status</option>
+      <option value="watching">Watching</option>
+      <option value="completed">Completed</option>
+      <option value="onhold">On Hold</option>
+      <option value="dropped">Dropped</option>
+      <option value="planned">Planned</option>
+    </select>
+    <select id="filterGenre"><option value="">All Genres</option></select>
+  </div>
+
+  <div class="addbar">
+    <button class="btn" onclick="openModal()">+ Add Anime</button>
+  </div>
+
+  <div id="list"></div>
+
+  <footer>
+    <span id="entryCount">0</span> entries · synced to your account<br>
+    <button class="btn secondary small" onclick="logout()" style="margin-top:10px;">Log Out</button>
+  </footer>
+
+  <button id="chatFab" onclick="openChat()">💬</button>
+</div>
+
+<div id="chatOverlay">
+  <div id="chatModal">
+    <div id="chatHeader">
+      <h2>AI Chat Entry</h2>
+      <button id="chatClose" onclick="closeChat()">✕</button>
+    </div>
+    <div id="chatMessages"></div>
+    <div id="chatHint">Bata de kya dekha — genre, episodes, status, kaha se. AI khud entry bana/update kar dega.</div>
+    <div id="chatInputRow">
+      <textarea id="chatInput" rows="1" placeholder="e.g. One Piece dekh liya 1090 tak, action adventure, crunchyroll pe"></textarea>
+      <button id="chatSend" onclick="sendChatMessage()">Send</button>
+    </div>
+  </div>
+</div>
+
+<div id="overlay">
+  <div id="modal">
+    <h2 id="modalTitle">Add Anime</h2>
+    <input type="hidden" id="editId">
+    <div class="field">
+      <label>Anime Title</label>
+      <input type="text" id="f_title" placeholder="e.g. One Piece">
+    </div>
+    <div class="field">
+      <label>Genres (comma separated)</label>
+      <input type="text" id="f_genres" placeholder="Action, Adventure, Shounen">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Status</label>
+        <select id="f_status">
+          <option value="watching">Watching</option>
+          <option value="completed">Completed</option>
+          <option value="onhold">On Hold</option>
+          <option value="dropped">Dropped</option>
+          <option value="planned">Planned</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Source</label>
+        <input type="text" id="f_source" placeholder="Crunchyroll, Netflix...">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Episodes Watched</label>
+        <input type="number" id="f_epwatched" min="0" value="0">
+      </div>
+      <div class="field">
+        <label>Total Episodes</label>
+        <input type="number" id="f_eptotal" min="0" placeholder="? if unknown">
+      </div>
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="f_notes" rows="2" placeholder="Kaha tak yaad hai, kya feel aayi, etc."></textarea>
+    </div>
+    <div class="modalActions">
+      <button class="btn secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn" onclick="saveEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
+<script>
+/* ============================================
+   PASTE YOUR FIREBASE CONFIG HERE
+   Get this from: Firebase Console > Project Settings > General > Your apps > Web app
+   ============================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyA-60uRj_rc8bWTBpIbO4flFd_vtS9RpFU",
+  authDomain: "luffy-san-4ca26.firebaseapp.com",
+  projectId: "luffy-san-4ca26",
+  storageBucket: "luffy-san-4ca26.firebasestorage.app",
+  messagingSenderId: "957007863310",
+  appId: "1:957007863310:web:d848be205885f24c58a65f"
+};
+
+/* ============================================
+   PASTE YOUR FREE GEMINI API KEY HERE
+   Get this from: https://aistudio.google.com/apikey (free, no card needed)
+   ============================================ */
+const GEMINI_API_KEY = "AQ.Ab8RN6JsTn-HSiq7hrbB2NLy0tdyt849_od2cbCcJpPqu5GXKQ"
+/* ============================================ */
+
+let db, auth, currentUser = null, entries = [], unsubscribe = null;
+
+function isConfigured(){
+  return firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("PASTE_");
+}
+
+if(!isConfigured()){
+  document.getElementById('setupNotice').style.display = 'block';
+} else {
+  firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  db = firebase.firestore();
+
+  auth.onAuthStateChanged(user => {
+    if(user){
+      currentUser = user;
+      document.getElementById('authScreen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      document.getElementById('userEmail').textContent = user.email;
+      subscribeEntries();
+    } else {
+      currentUser = null;
+      document.getElementById('authScreen').style.display = 'block';
+      document.getElementById('app').style.display = 'none';
+      if(unsubscribe) unsubscribe();
+    }
+  });
+}
+
+function doLogin(){
+  const email = document.getElementById('auth_email').value.trim();
+  const pass = document.getElementById('auth_password').value;
+  document.getElementById('authError').textContent = '';
+  auth.signInWithEmailAndPassword(email, pass).catch(err=>{
+    document.getElementById('authError').textContent = err.message;
+  });
+}
+
+function doSignup(){
+  const email = document.getElementById('auth_email').value.trim();
+  const pass = document.getElementById('auth_password').value;
+  document.getElementById('authError').textContent = '';
+  if(pass.length < 6){
+    document.getElementById('authError').textContent = 'Password kam se kam 6 characters ka hona chahiye.';
+    return;
+  }
+  auth.createUserWithEmailAndPassword(email, pass).catch(err=>{
+    document.getElementById('authError').textContent = err.message;
+  });
+}
+
+function logout(){
+  auth.signOut();
+}
+
+function collectionRef(){
+  return db.collection('users').doc(currentUser.uid).collection('entries');
+}
+
+function subscribeEntries(){
+  document.getElementById('syncStatus').textContent = 'Syncing...';
+  unsubscribe = collectionRef().orderBy('createdAt','desc').onSnapshot(snap=>{
+    entries = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+    document.getElementById('syncStatus').textContent = 'Synced ✓';
+    render();
+  }, err=>{
+    document.getElementById('syncStatus').textContent = 'Sync error: ' + err.message;
+  });
+}
+
+function openModal(id=null){
+  document.getElementById('overlay').classList.add('show');
+  if(id){
+    const e = entries.find(x=>x.id===id);
+    document.getElementById('modalTitle').textContent = 'Edit Anime';
+    document.getElementById('editId').value = id;
+    document.getElementById('f_title').value = e.title;
+    document.getElementById('f_genres').value = e.genres.join(', ');
+    document.getElementById('f_status').value = e.status;
+    document.getElementById('f_source').value = e.source || '';
+    document.getElementById('f_epwatched').value = e.epWatched || 0;
+    document.getElementById('f_eptotal').value = e.epTotal || '';
+    document.getElementById('f_notes').value = e.notes || '';
+  } else {
+    document.getElementById('modalTitle').textContent = 'Add Anime';
+    document.getElementById('editId').value = '';
+    ['f_title','f_genres','f_source','f_notes'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f_status').value = 'watching';
+    document.getElementById('f_epwatched').value = 0;
+    document.getElementById('f_eptotal').value = '';
+  }
+}
+function closeModal(){ document.getElementById('overlay').classList.remove('show'); }
+
+function saveEntry(){
+  const title = document.getElementById('f_title').value.trim();
+  if(!title){ alert('Title daal pehle.'); return; }
+  const genres = document.getElementById('f_genres').value.split(',').map(g=>g.trim()).filter(Boolean);
+  const id = document.getElementById('editId').value;
+  const data = {
+    title,
+    genres,
+    status: document.getElementById('f_status').value,
+    source: document.getElementById('f_source').value.trim(),
+    epWatched: parseInt(document.getElementById('f_epwatched').value)||0,
+    epTotal: document.getElementById('f_eptotal').value ? parseInt(document.getElementById('f_eptotal').value) : null,
+    notes: document.getElementById('f_notes').value.trim(),
+    updatedAt: Date.now()
+  };
+  if(id){
+    collectionRef().doc(id).update(data);
+  } else {
+    data.createdAt = Date.now();
+    collectionRef().add(data);
+  }
+  closeModal();
+}
+
+function deleteEntry(id){
+  if(!confirm('Ye entry delete karni hai?')) return;
+  collectionRef().doc(id).delete();
+}
+
+function statusLabel(s){
+  return {watching:'Watching', completed:'Completed', onhold:'On Hold', dropped:'Dropped', planned:'Planned'}[s] || s;
+}
+
+function updateFilters(){
+  const genreSet = new Set();
+  entries.forEach(e=>(e.genres||[]).forEach(g=>genreSet.add(g)));
+  const sel = document.getElementById('filterGenre');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">All Genres</option>' + [...genreSet].sort().map(g=>`<option value="${g}">${g}</option>`).join('');
+  sel.value = current;
+}
+
+function renderStats(){
+  const total = entries.length;
+  const byStatus = {};
+  entries.forEach(e=>{ byStatus[e.status] = (byStatus[e.status]||0)+1; });
+  const items = [
+    {label:'Total', val: total},
+    {label:'Watching', val: byStatus.watching||0},
+    {label:'Completed', val: byStatus.completed||0},
+    {label:'On Hold', val: byStatus.onhold||0},
+    {label:'Dropped', val: byStatus.dropped||0},
+    {label:'Planned', val: byStatus.planned||0},
+  ];
+  document.getElementById('stats').innerHTML = items.map(i=>`<div class="stat"><b>${i.val}</b><span>${i.label}</span></div>`).join('');
+  document.getElementById('entryCount').textContent = total;
+}
+
+function render(){
+  updateFilters();
+  renderStats();
+  const search = document.getElementById('search').value.toLowerCase();
+  const fStatus = document.getElementById('filterStatus').value;
+  const fGenre = document.getElementById('filterGenre').value;
+
+  let filtered = entries.filter(e=>{
+    if(search && !e.title.toLowerCase().includes(search)) return false;
+    if(fStatus && e.status !== fStatus) return false;
+    if(fGenre && !(e.genres||[]).includes(fGenre)) return false;
+    return true;
+  });
+
+  const list = document.getElementById('list');
+  if(filtered.length===0){
+    list.innerHTML = '<div class="empty">Koi entry nahi mili. "+ Add Anime" se naya daal.</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(e=>{
+    const pct = e.epTotal ? Math.min(100, Math.round((e.epWatched/e.epTotal)*100)) : (e.status==='completed'?100:0);
+    const epText = e.epTotal ? `${e.epWatched} / ${e.epTotal} eps` : `${e.epWatched} eps watched`;
+    return `
+    <div class="card">
+      <div class="cardTop">
+        <p class="title">${escapeHtml(e.title)}</p>
+        <span class="badge ${e.status}">${statusLabel(e.status)}</span>
+      </div>
+      <div class="genres">${(e.genres||[]).map(g=>`<span class="genre-tag">${escapeHtml(g)}</span>`).join('')}</div>
+      <div class="meta">${epText}${e.source ? ' · '+escapeHtml(e.source) : ''}</div>
+      <div class="progress-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>
+      ${e.notes ? `<div class="notes">${escapeHtml(e.notes)}</div>` : ''}
+      <div class="cardActions">
+        <button class="iconbtn" onclick="openModal('${e.id}')">Edit</button>
+        <button class="iconbtn" onclick="deleteEntry('${e.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+document.getElementById('search') && document.getElementById('search').addEventListener('input', render);
+document.getElementById('filterStatus') && document.getElementById('filterStatus').addEventListener('change', render);
+document.getElementById('filterGenre') && document.getElementById('filterGenre').addEventListener('change', render);
+document.getElementById('overlay').addEventListener('click', function(e){ if(e.target === this) closeModal(); });
+
+/* ============ AI CHAT ENTRY (Gemini) ============ */
+
+function isGeminiConfigured(){
+  return GEMINI_API_KEY && !GEMINI_API_KEY.startsWith("PASTE_");
+}
+
+function openChat(){
+  document.getElementById('chatOverlay').classList.add('show');
+  if(document.getElementById('chatMessages').childElementCount === 0){
+    appendChatMsg('bot', 'Hi! Bata de kya anime dekha, kitne episode, kaunsa genre, kaha se dekha, status kya hai. Main entry bana/update kar dunga.');
+  }
+}
+function closeChat(){
+  document.getElementById('chatOverlay').classList.remove('show');
+}
+
+function appendChatMsg(role, text, isError){
+  const div = document.createElement('div');
+  div.className = 'msg ' + role + (isError ? ' error' : '');
+  div.textContent = text;
+  document.getElementById('chatMessages').appendChild(div);
+  document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+}
+
+async function sendChatMessage(){
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+  appendChatMsg('user', text);
+
+  if(!isGeminiConfigured()){
+    appendChatMsg('bot', 'Gemini API key set nahi hai. Script ke top mein GEMINI_API_KEY paste kar (free key: aistudio.google.com/apikey).', true);
+    return;
+  }
+
+  appendChatMsg('bot', 'Samajh raha hoon...');
+  const thinkingMsg = document.getElementById('chatMessages').lastElementChild;
+
+  try{
+    const existingList = entries.map(e => ({ id: e.id, title: e.title })).slice(0, 50);
+
+    const systemPrompt = `You are a parser for a personal anime tracking app. The user will describe (in Hinglish/English mix) what anime they watched. Match against this list of existing entries if the title is similar (fuzzy match ok): ${JSON.stringify(existingList)}.
+
+Return ONLY a raw JSON object, no markdown, no code fences, no explanation. Format:
+{
+  "action": "create" or "update",
+  "id": "<existing id if update, else null>",
+  "title": "<anime title, proper case>",
+  "genres": ["genre1","genre2"],
+  "status": "watching" | "completed" | "onhold" | "dropped" | "planned",
+  "epWatched": <number>,
+  "epTotal": <number or null>,
+  "source": "<platform or empty string>",
+  "notes": "<any extra notes, else empty string>",
+  "reply": "<short confirmation message in Hinglish for the user>"
+}
+
+If user doesn't specify a field, make a reasonable guess or use empty/null. If title matches an existing entry, use action "update" and its id, and keep fields that user didn't mention same as reasonable defaults (still include full object).
+
+User message: "${text}"`;
+
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: systemPrompt }] }]
+      })
+    });
+
+    const data = await resp.json();
+    thinkingMsg.remove();
+
+    if(data.error){
+      appendChatMsg('bot', 'Error: ' + data.error.message, true);
+      return;
+    }
+
+    let raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    raw = raw.replace(/```json/g,'').replace(/```/g,'').trim();
+
+    let parsed;
+    try{
+      parsed = JSON.parse(raw);
+    }catch(e){
+      appendChatMsg('bot', 'Samajh nahi paya, thoda clearly bata (title, episodes, genre, status).', true);
+      return;
+    }
+
+    const payload = {
+      title: parsed.title || 'Untitled',
+      genres: Array.isArray(parsed.genres) ? parsed.genres : [],
+      status: parsed.status || 'watching',
+      epWatched: parseInt(parsed.epWatched) || 0,
+      epTotal: parsed.epTotal ? parseInt(parsed.epTotal) : null,
+      source: parsed.source || '',
+      notes: parsed.notes || '',
+      updatedAt: Date.now()
+    };
+
+    if(parsed.action === 'update' && parsed.id){
+      await collectionRef().doc(parsed.id).update(payload);
+    } else {
+      payload.createdAt = Date.now();
+      await collectionRef().add(payload);
+    }
+
+    appendChatMsg('bot', parsed.reply || `Done — ${payload.title} save ho gaya.`);
+
+  }catch(err){
+    if(thinkingMsg) thinkingMsg.remove();
+    appendChatMsg('bot', 'Kuch gadbad hui: ' + err.message, true);
+  }
+}
+
+document.getElementById('chatInput').addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    sendChatMessage();
+  }
+});
+document.getElementById('chatOverlay').addEventListener('click', function(e){ if(e.target === this) closeChat(); });
+</script>
+
+</body>
+</html>
